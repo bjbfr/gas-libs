@@ -1,0 +1,7 @@
+{
+  // link to ./src/tsconfig-gas.json
+  "extends": "./tsconfig-gas",
+  "references": [
+  //     { "path": "../../libs/<dependency>/tsconfig.json" }
+  ]
+}
