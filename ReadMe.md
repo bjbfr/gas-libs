@@ -13,9 +13,11 @@ title: Namespaces Hierarchy
 flowchart TB
     templating --> fs
     fs --> ui
-    ui & fs --> utils
+    spreadsheet & ui & fs --> utils
 
-    templating & fs & ui & utils --> unittest
+    templating & spreadsheet & fs & properties & ui & utils --> unittest
+
+    spreadsheet --> obj & cmp
 
     subgraph  
         direction TB
