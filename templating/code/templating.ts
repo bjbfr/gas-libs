@@ -5,7 +5,7 @@ namespace Templating {
   // type VarDescSheet = { name: string, sheet?: number, row?: number, column?: number }
   export interface VarDesc { name: string, sheet?: number, row?: number, column?: number }
   interface VarValuesDesc extends VarDesc {value:number | string}
-  export type FileType = ReturnType<typeof Fs.openById>
+
   type VarValuesT = ReturnType<typeof get_template_vars_values>
 
   /**
@@ -64,7 +64,7 @@ namespace Templating {
     return message;
   }
 
-  export function get_template_vars(file: FileType, type: Fs.MineType): VarDesc[] {
+  export function get_template_vars(file: Fs.FileType, type: Fs.MineType): VarDesc[] {
     if (file) {
 
       if (type === Fs.MineType.DOC) {
@@ -123,7 +123,7 @@ namespace Templating {
     });// to be modified
   }
 
-  function set_template_vars(file:FileType, type:Fs.MineType, vars_values:VarValuesDesc[]) {
+  function set_template_vars(file:Fs.FileType, type:Fs.MineType, vars_values:VarValuesDesc[]) {
     if (type === Fs.MineType.DOC) {
       let body = (file as GoogleAppsScript.Document.Document).getBody();
       vars_values.forEach(({ name, value }) => body.replaceText('{' + name + '}', value.toString()));
