@@ -10,7 +10,7 @@ namespace Unittest {
 
   export interface Res<T, V, W = undefined> { message: string, results?: Array<Output<T, V, W>> }
 
-  export function run<T, V, W = undefined>(label: string, data: Array<Input<T, V>>, fn: (input: T, i: number) => V, selector: ((input: T) => W) | undefined = undefined): Res<T,V,W> { //Array<Output> | undefined
+  export function run<T, V, W = undefined>(label: string, data: Array<Input<T, V>>, fn: (input: T, i: number) => V, selector: ((input: T) => W) | undefined = undefined): Res<T, V, W> { //Array<Output> | undefined
 
     let ret;
     const l = data.length;
@@ -25,8 +25,9 @@ namespace Unittest {
         try {
           const output = fn(input, i);
           const result = Cmp.cmp(expected, output);
-          return { result: result, input: input_view, output:output, expected: expected, i: i, error: undefined };
+          return { result: result, input: input_view, output: output, expected: expected, i: i, error: undefined };
         } catch (e: any) {
+          console.log(e.stack)
           return { result: false, input: input_view, output: undefined, expected: expected, i: i, error: e };
         }
       });
@@ -39,7 +40,7 @@ namespace Unittest {
           results: results
         };
       } else {
-        ret = {message: `${label}: ${OK_CHAR} ${l} tests passed.`}
+        ret = { message: `${label}: ${OK_CHAR} ${l} tests passed.` }
       }
     }
 
@@ -49,18 +50,21 @@ namespace Unittest {
     //   )
     // )
 
-    console.log(`${label}:\n${JSON.stringify(ret)}`);
+    // console.log(`${label}:\n${JSON.stringify(ret)}`);
+    console.log(
+      `${label}:\n${JSON.stringify(ret, (key, value) => key === 'error' && value !== undefined ? value.stack : value)}`
+    );
     return ret;
   }
-  
-  export function run_all(funcNames:Array<string>){
-  
+
+  export function run_all(funcNames: Array<string>) {
+
     return funcNames.map(funcName => {
       // @ts-ignore: no implicit any ignored with globalThis
       const f = globalThis[funcName];
       return f();
     });
-  
+
   }
 }
 
