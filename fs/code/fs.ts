@@ -3,26 +3,28 @@ namespace Fs {
   export const DIR_SEP = '/';
   export const DRIVE_ROOT_NAME = DriveApp.getRootFolder().getName();
 
-  export const DOCUMENT_TYPE = 'application/vnd.google-apps.document';
-  export const SPREADSHEET_TYPE = 'application/vnd.google-apps.spreadsheet';
-
   export enum MineType {
     DOC = 'application/vnd.google-apps.document',
-    SHEET = 'application/vnd.google-apps.spreadsheet'
+    SHEET = 'application/vnd.google-apps.spreadsheet',
+    TEXT = 'text/csv'
   }
 
-  // export type FileType = keyof typeof FileTypeEnum
-  // export type FileDesc = {id: string, name: string, type: GoogleAppsScript.Base.MimeType}
   export type FileDesc = { id: string, name: string, type: MineType | undefined }
+  export type FileType = ReturnType<typeof Fs.openById>
+  export type DriveFile = ReturnType<typeof DriveApp.getFileById>
 
-  export function openById({id,type}:FileDesc){
+  /**
+   * 
+   * @param param0 
+   * @returns 
+   */
+  export function openById({ id, type }: FileDesc) {
     if (type === MineType.SHEET)
       return SpreadsheetApp.openById(id);
     else if (type === MineType.DOC)
       return DocumentApp.openById(id)
     return;
   }
-
   /**
    * 
    * @param srcDir 
@@ -113,7 +115,6 @@ namespace Fs {
       return dstDirIds[dstDirIds.length - 1].id as string; // cannot be undefined
     }
   }
-
   /**
    * Retrieves the id of an element (file or folder) based on its name and an iterator of possible candidates.
    * Returns undefined if none of the candidates matches the name.
@@ -132,7 +133,6 @@ namespace Fs {
     }
     return;
   }
-
   /**
    * Returns the path of {@link elt}
    * @param elt {GoogleAppsScript.Drive.File|GoogleAppsScript.Drive.Folder} 
@@ -156,7 +156,6 @@ namespace Fs {
     );
 
   }
-
   /**
    * Splits a path into parts (reverse operation of path_from_parts)
    * @param path 
@@ -165,7 +164,6 @@ namespace Fs {
   export function path_parts(path: Path): Array<string> {
     return path.split(DIR_SEP).filter(p => p !== '');
   }
-
   /**
    * Assembles {@link parts} into a path (reverse operation of path_parts)
    * @param parts 
@@ -190,7 +188,6 @@ namespace Fs {
     else
       return path;
   }
-
   /**
    * Converts a drive path into a unix one (reverse operation of unix_to_drive)
    * @param path {AbsolutePath}
@@ -201,5 +198,51 @@ namespace Fs {
       path_parts(path).filter(p => p != DRIVE_ROOT_NAME)
     )
   }
+  /***
+   * 
+   */
+  export function get_file_content(file: DriveFile) {
+    return file.getBlob().getDataAsString();
+  }
 
+  type AddSrcCallback = ((fileDesc: FileDesc) => { header: string[], values: [] }) | null
+  export const srcFileId = (fileDesc: FileDesc) => ({ header: ['fileId'], values: [fileDesc.id] })
+  export const srcFileName = (fileDesc: FileDesc) => ({ header: ['fileName'], values: [fileDesc.name] })
+  /**
+   * Reads csv data contains in file pointed by {@link fileDesc}. 
+   * Source data description: {@sep} is the fields separator, {@eol} is the End of Line separator, {@hasHeader} states whether there is an header or not.
+   * {addSrcCallback} enables one to choose piece of information to be added about the file from which data is read.
+   * @param fileDesc {FileDesc} file descriptor
+   * @param addSrcCallback {fileDesc:FileDesc => ({header: string[],values: any[]})}
+   * @param hasHeader {boolean}
+   * @param sep {string}
+   * @param eol {string}
+   */
+  export function csv_data(fileDesc: FileDesc, addSrcCallback: AddSrcCallback = null, hasHeader: boolean = true, sep: string = ';', eol: string = '\r\n') {
+    try {
+      const file = DriveApp.getFileById(fileDesc.id);
+      const content = get_file_content(file).trim();
+      const csv_data = content.split(eol).map(line => line.split(sep));
+      if (csv_data.length > 0) {
+        if (addSrcCallback) {
+          const { header, values } = addSrcCallback(fileDesc);
+          csv_data.forEach((row, i) => {
+            if (i === 0) {
+              if (hasHeader) {
+                if (header) row.concat(header)
+              } else {
+                row.concat(values)
+              }
+            }// i === 0
+            else
+              row.concat(values)
+          });
+        }
+      }
+      return csv_data;
+    } catch (e: any) {
+      console.log(`Exception in ${e.message}`)
+    }
+    return;
+  }
 }

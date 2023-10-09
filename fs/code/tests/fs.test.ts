@@ -71,19 +71,38 @@ function fs_test_list_dir() {
     "list dir",
     [
       {
-        input: '13sGA0_gXxq0OVwRePOHfNXV3Tns-iE_a', 
+        input: '13sGA0_gXxq0OVwRePOHfNXV3Tns-iE_a',
         expected: [
-          {id:"11RqCdU_z6D0Anv-u838UtEamENVhmfU1ZiBAQKeMv9k",name:"list_sheet",type:Fs.MineType.SHEET},
-          {id:"1XBEf0niRzIh1vAuXov7RoAt3lvnpP27cSRF4Qplm3RM",name:"list_doc",type:Fs.MineType.DOC}
+          { id: "11RqCdU_z6D0Anv-u838UtEamENVhmfU1ZiBAQKeMv9k", name: "list_sheet", type: Fs.MineType.SHEET },
+          { id: "1XBEf0niRzIh1vAuXov7RoAt3lvnpP27cSRF4Qplm3RM", name: "list_doc", type: Fs.MineType.DOC }
         ]
       }
     ],
     (input, _) => Fs.list_dir(input)
   )
+}
+
+function fs_test_csv_data() {
+
+  return Unittest.run<string, any[][] | undefined>(
+    "csv_data",
+    [
+      {
+        input: '1pAze6gupbsMNHcGJFUeqkOhsKgJIUkMQ',
+        expected: [
+          ["Date", "Code journal", "Numéro du compte", "Type", "Débit", "Crédit", "Solde mouvement", "Solde bancaire", "Libellé", "Montant de TVA total", "Pièces", "Date d'ajout pièces", "Commentaire"], 
+          ["07/07/2023", "BQ", "", "Virement", "", "55,00", "55,00", "55,00", "Virement de Benjamin BOUCHARD - Creditor Name SEPA : BB IMMO - De: M  BOUCHARD BENJAMIN", "", "", "", ""], 
+          ["26/09/2023", "BQ", "", "Virement", "9,48", "", "-9,48", "426,90", "Abonnement Shine - 26 septembre", "", "ACH_2023-09-26_abonnement_shine_-_26_septembre_95f4af2d-8045-42f4-9b92-484c9e9252d2.pdf", "26/09/2023", ""]
+        ]
+      }
+    ],
+    (input) => Fs.csv_data({ id: input, name: '', type: Fs.MineType.TEXT })
+  );
 
 }
 
-function fs_test_all(){
+
+function fs_test_all() {
   return Unittest.run_all([
     "fs_test_get_file_path",
     "fs_test_path_parts",
@@ -91,7 +110,8 @@ function fs_test_all(){
     "fs_test_drive_to_unix",
     "fs_test_unix_to_drive_to_unix",
     "fs_test_drive_to_unix_to_drive",
-    "fs_test_list_dir"
+    "fs_test_list_dir",
+    "fs_test_csv_data"
   ])
 }
 
