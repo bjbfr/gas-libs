@@ -1,3 +1,5 @@
+///<reference path="./utils.ts">
+
 namespace Utils {
 
   export function assert(condition: Boolean, message: string) {
@@ -36,37 +38,53 @@ namespace Utils {
 
   export const currentApp = gwapp();
 
-  // type EnumTypeString<TEnum extends string> = { [key in string]: TEnum | string; }
+  /**
+   * Generates a sequence (an array) of {@link num} elements (number) starting from {@link first} 
+   * @param num   : number of elements in the sequence
+   * @param first : first index in the sequence
+   */
+  export function seq(num: number, first: number = 0) {
+    return Array.from(Array(num).keys()).map(i => i + first)
+  }
 
-  // type EnumTypeNumber<TEnum extends number> = { [key in string]: TEnum | number; } | { [key in number]: string; }
+  /**
+   * 
+   * @param csv_data 
+   */
+  export function json_from_csv(csv_data: any[][]) {
+    const headers = csv_data[0];
+    let entries = csv_data.map((row, i) => {
+      if (i === 0) return row;
+      else return Utils.zip(headers, row)
+    })
+    entries.shift();
+    return entries.map(entry => Object.fromEntries(entry)) //as Obj_t[]
+  }
 
-  // type EnumType<TEnum extends string | number> = (TEnum extends string ? EnumTypeString<TEnum> : never) | (TEnum extends number ? EnumTypeNumber<TEnum> : never)
+  /**
+   * 
+   * @param json_data 
+   * @param keys 
+   * @param add_headers 
+   */
+  export function csv_from_json(json_data: Obj_t[], keys: string[] | undefined = undefined, add_headers: boolean = false) {
 
-  // type EnumOf<TEnumType> = TEnumType extends EnumType<infer U> ? U : never
+    const json_data_keys = Object.keys(json_data[0]);
+    // headers: keys to be extracted, nb_keys: number of keys that are actually part of the json_data
+    const [headers, nb_keys] = keys ?
+      [keys, keys.filter(k => json_data_keys.indexOf(k) !== -1).length]
+      :
+      [json_data_keys, json_data_keys.length];
 
-  // /**
-  //  * Converts string to enum value
-  //  * @param e 
-  //  * @param x 
-  //  * @returns 
-  //  */
-  // export function fromString<TEnumType extends { [k: string]: string }>(e: TEnumType, x: string) {
-  //   const entry = Object.entries(e).find(([_, v]) => x === v);
-  //   if (entry)
-  //     return entry[1] as EnumOf<TEnumType>;
-  //   return;
-  // }
-  // enum SoundMode{
-  //     S = "Silent",
-  //     N = "Normal",
-  //     L = "Loud"
-  // }
-  // function log_soundMode(x:SoundMode|undefined){
-  //     console.log(`here:${x}`);
-  // }
-  // const y:SoundMode|undefined = fromString(SoundMode,"Silent");
-  // log_soundMode(y)
-  // // log_soundMode("Silent") // ko
-  // if(y === SoundMode.S)
-  //     console.log("this is true")
+
+    const csv_data = () => nb_keys === 0 ?
+      [[]]
+      :
+      json_data.map(x => headers.map(h => x[h]));
+
+    return (
+      add_headers ? [headers].concat(csv_data()) : csv_data()
+    )
+  }
+
 }

@@ -29,7 +29,20 @@ function utils_test_fromString(){
     )
 }
 
+function utils_test_json_from_csv() {
+    return Unittest.run<any[][], Obj_t[]>(
+      "json_from_csv",
+      [
+        {
+          input: [['a', 'b', 'c'], [1, 2, 3], [4, 5, 6]],
+          expected: [{ a: 1, b: 2, c: 3 }, { a: 4, b: 5, c: 6 }]
+        }
+      ],
+      (input) => Utils.json_from_csv(input)
+    );
+  }
+
 // test_all
 function utils_test_all(){
-    return Unittest.run_all(['utils_test_fromString'])
+    return Unittest.run_all(['utils_test_fromString','utils_test_json_from_csv'])
 }
