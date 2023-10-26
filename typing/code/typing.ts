@@ -13,4 +13,7 @@ namespace Typing {
         return (!!v) && (`${v.constructor}` === 'function Object() { [native code] }');
     }
     
+    export function is_date(v:any){
+        return (!!v && (Object.prototype.toString.call(v) === '[object Date]'))
+    }
 }
