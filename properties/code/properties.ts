@@ -1,5 +1,9 @@
 namespace Properties {
 
+    /**
+     * Simple binding around PropertiesService Google AppScript service.
+     * It requires that properties definedd should in App Script should be parseable JSON string.
+     */
     export enum PropertyType {
         Script,
         User,
@@ -41,7 +45,7 @@ namespace Properties {
             return props.getKeys();
         }
         return;
-    }
+    } 
 
     export function getProperties(propType: PropertyType = PropertyType.Script) {
 
