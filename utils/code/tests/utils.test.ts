@@ -38,7 +38,7 @@ function utils_test_json_from_csv() {
           expected: [{ a: 1, b: 2, c: 3 }, { a: 4, b: 5, c: 6 }]
         }
       ],
-      (input) => Utils.json_from_csv(input)
+      (input) => Utils.obj_from_csv(input)
     );
   }
 
