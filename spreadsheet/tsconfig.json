@@ -13,6 +13,15 @@
     },
     {
       "path": "../../libs/cmp/tsconfig.json"
+    },
+    {
+      "path": "../../libs/typing/tsconfig.json"
+    },
+    {
+      "path": "../../libs/sheetrange/tsconfig.json"
+    },
+    {
+      "path": "../../libs/properties/tsconfig.json"
     }
     //     { "path": "../../libs/<dependency>/tsconfig.json" }
   ]
