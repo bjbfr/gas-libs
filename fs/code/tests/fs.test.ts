@@ -16,7 +16,7 @@ function fs_test_get_file_path() {
 function fs_test_path_parts() {
   return Unittest.run<string, Array<string>>(
     "path parts",
-    [{ input: `/${Fs.DRIVE_ROOT_NAME}/a/b/c/`, expected: [Fs.DRIVE_ROOT_NAME, 'a', 'b', 'c'] }],
+    [{ input: `/${Fs.DRIVE_ROOT_NAME()}/a/b/c/`, expected: [Fs.DRIVE_ROOT_NAME(), 'a', 'b', 'c'] }],
     (input, _) => Fs.path_parts(input)
   );
 }
@@ -25,8 +25,8 @@ function fs_test_unix_to_drive() {
   return Unittest.run<string, string>(
     "unix to drive",
     [
-      { input: "/a/b/c/", expected: `/${Fs.DRIVE_ROOT_NAME}/a/b/c/` },
-      { input: `/${Fs.DRIVE_ROOT_NAME}/a/b/c/`, expected: `/${Fs.DRIVE_ROOT_NAME}/a/b/c/` }
+      { input: "/a/b/c/", expected: `/${Fs.DRIVE_ROOT_NAME()}/a/b/c/` },
+      { input: `/${Fs.DRIVE_ROOT_NAME()}/a/b/c/`, expected: `/${Fs.DRIVE_ROOT_NAME()}/a/b/c/` }
     ],
     (input, _) => Fs.unix_to_drive(input)
   );
@@ -36,7 +36,7 @@ function fs_test_drive_to_unix() {
   return Unittest.run<string, string>(
     "drive to unix",
     [
-      { input: `/${Fs.DRIVE_ROOT_NAME}/a/b/c/`, expected: "/a/b/c/" },
+      { input: `/${Fs.DRIVE_ROOT_NAME()}/a/b/c/`, expected: "/a/b/c/" },
       { input: "/a/b/c/", expected: "/a/b/c/" }
     ],
     (input, _) => Fs.drive_to_unix(input)
@@ -47,7 +47,7 @@ function fs_test_unix_to_drive_to_unix() {
   return Unittest.run<string, string>(
     "unix to drive to unix",
     [
-      { input: `/${Fs.DRIVE_ROOT_NAME}/a/b/c/`, expected: '/a/b/c/' },
+      { input: `/${Fs.DRIVE_ROOT_NAME()}/a/b/c/`, expected: '/a/b/c/' },
       { input: '/a/b/c/', expected: '/a/b/c/' }
     ],
     (input, _) => Fs.drive_to_unix(Fs.unix_to_drive(input))
@@ -58,8 +58,8 @@ function fs_test_drive_to_unix_to_drive() {
   return Unittest.run<string, string>(
     "drive to unix to drive",
     [
-      { input: `/${Fs.DRIVE_ROOT_NAME}/a/b/c/`, expected: `/${Fs.DRIVE_ROOT_NAME}/a/b/c/` },
-      { input: '/a/b/c/', expected: `/${Fs.DRIVE_ROOT_NAME}/a/b/c/` }
+      { input: `/${Fs.DRIVE_ROOT_NAME()}/a/b/c/`, expected: `/${Fs.DRIVE_ROOT_NAME()}/a/b/c/` },
+      { input: '/a/b/c/', expected: `/${Fs.DRIVE_ROOT_NAME()}/a/b/c/` }
     ],
     (input, _) => Fs.unix_to_drive(Fs.drive_to_unix(input))
   );
@@ -78,7 +78,7 @@ function fs_test_list_dir() {
         ]
       }
     ],
-    (input, _) => Fs.list_dir(input)
+    (input, _) => Fs.list_files(input)
   )
 }
 

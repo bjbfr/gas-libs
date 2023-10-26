@@ -1,7 +1,7 @@
 namespace Fs {
 
   export const DIR_SEP = '/';
-  export const DRIVE_ROOT_NAME = DriveApp.getRootFolder().getName();
+  export const DRIVE_ROOT_NAME = () => DriveApp.getRootFolder().getName();
 
   export enum MineType {
     DOC = 'application/vnd.google-apps.document',
@@ -10,6 +10,8 @@ namespace Fs {
   }
 
   export type FileDesc = { id: string, name: string, type: MineType | undefined }
+  export type DirDesc = { id: string, name: string }
+
   export type FileType = ReturnType<typeof Fs.openById>
   export type DriveFile = ReturnType<typeof DriveApp.getFileById>
 
@@ -23,7 +25,7 @@ namespace Fs {
       return SpreadsheetApp.openById(id);
     else if (type === MineType.DOC)
       return DocumentApp.openById(id)
-    return;
+    return; 
   }
   /**
    * 
@@ -48,30 +50,47 @@ namespace Fs {
     // find/create dstDir
     const dstDirId = find_mk_dir(dstDir);
     // list dir content
-    const ls_dirs = list_dir(dstDirId);
+    const ls_dirs = list_files(dstDirId);
     // check if target already exists in dstDir, if yes move it to trash
     const ls_dir = ls_dirs.find(({ name }) => name === dstFile);
     if (ls_dir) {
       const { id } = ls_dir
       DriveApp.getFileById(id).setTrashed(true);
+
     }
     //copy 'srcFile' into 'dstDir' with name 'dstFile'
     return DriveApp.getFileById(srcFileId).makeCopy(dstFile, DriveApp.getFolderById(dstDirId));
   }
   /**
-   * Lists content of directory represented by its {@link dirId}
+   * Lists files in a  directory represented by its {@link dirId}
    * @param dirId {string}
-   * @returns 
+   * @returnsx
+   * 
    */
-  export function list_dir(dirId: string): Array<FileDesc> {
-    let ret = [];
-    let iter = DriveApp.getFolderById(dirId).getFiles();
+  export function list_files(dirId: string): Array<FileDesc> {
+    const ret = [];
+    const iter = DriveApp.getFolderById(dirId).getFiles();
     while (iter.hasNext()) {
-      let file = iter.next();
+      const file = iter.next();
       ret.push({ id: file.getId(), name: file.getName(), type: Utils.fromString(MineType, file.getMimeType()) });
     }
     return ret;
   }
+  /**
+   * Lists directories in a  directory represented by its {@link dirId}
+   * @param dirId {string}
+   * @returns 
+   */
+  export function list_dirs(dirId: string): Array<DirDesc> {
+    const ret = [];
+    const iter = DriveApp.getFolderById(dirId).getFolders();
+    while (iter.hasNext()) {
+      const dir = iter.next();
+      ret.push({ id: dir.getId(), name: dir.getName() });
+    }
+    return ret;
+  }
+
   /**
    * Finds a directory from its path {@link pathDir} and returns its id.
    * Creates all missing elements along the directories chain.
@@ -182,8 +201,8 @@ namespace Fs {
    * @returns 
    */
   export function unix_to_drive(path: AbsolutePath): AbsolutePath {
-    if (!path.startsWith(`${DIR_SEP}${DRIVE_ROOT_NAME}`))
-      return `${DIR_SEP}${DRIVE_ROOT_NAME}${path}`;
+    if (!path.startsWith(`${DIR_SEP}${DRIVE_ROOT_NAME()}`))
+      return `${DIR_SEP}${DRIVE_ROOT_NAME()}${path}`;
     else
       return path;
   }
@@ -194,7 +213,7 @@ namespace Fs {
    */
   export function drive_to_unix(path: AbsolutePath): AbsolutePath {
     return path_from_parts(
-      path_parts(path).filter(p => p != DRIVE_ROOT_NAME)
+      path_parts(path).filter(p => p != DRIVE_ROOT_NAME())
     )
   }
   /***
@@ -203,10 +222,9 @@ namespace Fs {
   export function get_file_content(file: DriveFile) {
     return file.getBlob().getDataAsString();
   }
-
-  type AddSrcCallback = ((fileDesc: FileDesc) => { header: string[], values: [] }) | null
+  type AddSrcCallback = ((fileDesc: FileDesc) => { header: string[], values: any[] }) | null
   export const srcFileId = (fileDesc: FileDesc) => ({ header: ['fileId'], values: [fileDesc.id] })
-  export const srcFileName = (fileDesc: FileDesc) => ({ header: ['fileName'], values: [fileDesc.name] })
+  export const srcFileName = (fileDesc: FileDesc) => ({ header: ['File'], values: [fileDesc.name] })
   /**
    * Reads csv data contains in file pointed by {@link fileDesc}. 
    * Source data description: {@sep} is the fields separator, {@eol} is the End of Line separator, {@hasHeader} states whether there is an header or not.
@@ -217,7 +235,8 @@ namespace Fs {
    * @param sep {string}
    * @param eol {string}
    */
-  export function csv_data(fileDesc: FileDesc, addSrcCallback: AddSrcCallback = null, hasHeader: boolean = true, sep: string = ';', eol: string = '\r\n') {
+  const push_array = (c: any[], vs: any[]) => vs.forEach(v => c.push(v))
+  export function csv_data(fileDesc: FileDesc, addSrcCallback: AddSrcCallback = null, hasHeader: boolean = true, sep: string = ';', eol: string = '\r\n', quoted_values: boolean = false) {
     try {
       const file = DriveApp.getFileById(fileDesc.id);
       const content = get_file_content(file).trim();
@@ -228,17 +247,25 @@ namespace Fs {
           csv_data.forEach((row, i) => {
             if (i === 0) {
               if (hasHeader) {
-                if (header) row.concat(header)
+                if (header) push_array(row, header)
               } else {
-                row.concat(values)
+                push_array(row, values)
               }
             }// i === 0
             else
-              row.concat(values)
+              push_array(row, values)
           });
         }
+        if (quoted_values) {
+          csv_data.forEach(row => row.forEach((value, i) => { row[i] = value.replace(/^"|"$/g, '') }))
+        }
       }
-      return csv_data;
+      const { res, errors } = Utils.check_tabular_data(csv_data);
+      if (!res) {
+        console.log(`Data read is not tabular (Row #,Number of columns):\n ${errors} Vs expected: ${csv_data[0].length}`)
+      } else {
+        return csv_data;
+      }
     } catch (e: any) {
       console.log(`Exception in ${e.message}`)
     }
